@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<meta name="theme-color" content="#1e0a2e">
+<title>🌸 Safia's MAP Prep – Complete</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+<div class="wrap">
+  <div class="topbar">
+    <h1>🌸 Safia's MAP Prep</h1>
+    <div class="score-board">
+      <span>✅ <span id="correctCount">0</span></span>
+      <span>⭐ <span id="starCount">0</span></span>
+    </div>
+  </div>
+  
+  <div class="settings-row">
+    <button class="settings-btn" id="toggleSpeechBtn">🔊 Speech ON</button>
+    <button class="settings-btn" id="toggleConfettiBtn">🎉 Confetti ON</button>
+    <button class="settings-btn" id="showStatsBtn">📊 Show Stats</button>
+  </div>
+  
+  <div class="difficulty-selector">
+    <button class="difficulty-btn" data-diff="easy">🌸 Easy</button>
+    <button class="difficulty-btn active" data-diff="medium">🍑 Medium</button>
+    <button class="difficulty-btn" data-diff="hard">🥊 Hard</button>
+  </div>
+
+  <div id="menuScreen">
+    <div class="section-header math">➕ MATHEMATICS <span class="count-badge">2 problems each</span></div>
+    <div class="grid-menu">
+      <div class="skill-card" data-subject="additionCarry"><div class="skill-icon">➕🍑</div><div class="skill-name">Addition with Carry</div><div class="skill-desc">Adding big numbers</div></div>
+      <div class="skill-card" data-subject="subtractionBorrow"><div class="skill-icon">➖🥊</div><div class="skill-name">Subtraction with Borrow</div><div class="skill-desc">Taking away with regrouping</div></div>
+      <div class="skill-card" data-subject="missingNumber"><div class="skill-icon">❓🔢</div><div class="skill-name">What Number Is Missing?</div><div class="skill-desc">Find the missing number</div></div>
+      <div class="skill-card" data-subject="makeASum"><div class="skill-icon">💎➕</div><div class="skill-name">Which Two Add Up?</div><div class="skill-desc">Find the pair that makes the total</div></div>
+      <div class="skill-card" data-subject="howManyMore"><div class="skill-icon">🦋➖</div><div class="skill-name">How Many More?</div><div class="skill-desc">Compare numbers</div></div>
+      <div class="skill-card" data-subject="wordProblems"><div class="skill-icon">📖👑</div><div class="skill-name">Story Problems</div><div class="skill-desc">Fun math stories</div></div>
+    </div>
+
+    <div class="section-header measurement">📏 MEASUREMENT & DATA <span class="count-badge">2 problems each</span></div>
+    <div class="grid-menu">
+      <div class="skill-card" data-subject="time"><div class="skill-icon">⏰</div><div class="skill-name">Telling Time</div><div class="skill-desc">Read the clock</div></div>
+      <div class="skill-card" data-subject="money"><div class="skill-icon">💰</div><div class="skill-name">Counting Coins</div><div class="skill-desc">Pennies, nickels, dimes</div></div>
+      <div class="skill-card" data-subject="graphs"><div class="skill-icon">📊</div><div class="skill-name">Reading Graphs</div><div class="skill-desc">Picture and bar graphs</div></div>
+      <div class="skill-card" data-subject="lengthWeight"><div class="skill-icon">📏⚖️</div><div class="skill-name">Length & Weight</div><div class="skill-desc">Longer/shorter, heavier/lighter</div></div>
+      <div class="skill-card" data-subject="sorting"><div class="skill-icon">📦🔀</div><div class="skill-name">Sorting</div><div class="skill-desc">Sort by size, temperature, etc.</div></div>
+    </div>
+
+    <div class="section-header math">🏆 MATH FINAL REVIEW</div>
+    <div class="grid-menu">
+      <div class="skill-card" data-subject="mathReview"><div class="skill-icon">🏆📊</div><div class="skill-name">⭐ MATH FINAL REVIEW</div><div class="skill-desc">11 problems (one from each math skill!)</div></div>
+    </div>
+
+    <div class="section-header reading">📖 READING & ENGLISH <span class="count-badge">3 problems each</span></div>
+    <div class="grid-menu">
+      <div class="skill-card" data-subject="readingComprehension"><div class="skill-icon">📖🎧</div><div class="skill-name">Reading Comprehension</div><div class="skill-desc">Read a story & answer</div></div>
+      <div class="skill-card" data-subject="listeningComprehension"><div class="skill-icon">🎧👂</div><div class="skill-name">Listening Comprehension</div><div class="skill-desc">🔊 Listen & answer</div></div>
+      <div class="skill-card" data-subject="vocabulary"><div class="skill-icon">📝✨</div><div class="skill-name">Vocabulary</div><div class="skill-desc">Word meanings</div></div>
+      <div class="skill-card" data-subject="sequencing"><div class="skill-icon">🥊📝</div><div class="skill-name">What Happens Next?</div><div class="skill-desc">Order the story</div></div>
+      <div class="skill-card" data-subject="fillInBlank"><div class="skill-icon">🔤📝</div><div class="skill-name">Fill in the Blank</div><div class="skill-desc">Choose the word</div></div>
+      <div class="skill-card" data-subject="spelling"><div class="skill-icon">🧸⭐</div><div class="skill-name">Spelling</div><div class="skill-desc">Spell the word</div></div>
+      <div class="skill-card" data-subject="readingReview"><div class="skill-icon">🏆📚</div><div class="skill-name">⭐ READING FINAL REVIEW</div><div class="skill-desc">6 problems (one from each reading skill!)</div></div>
+    </div>
+    
+    <div class="stats-panel" id="statsPanel" style="display: none;">
+      <h3>📊 Learning Stats</h3>
+      <div class="stats-grid" id="statsGrid"></div>
+      <button class="action-btn" style="margin-top:10px;" id="closeStatsBtn">Close</button>
+    </div>
+    
+    <div class="progress-bar"><div class="progress-fill" id="globalProgress" style="width:0%"></div></div>
+  </div>
+
+  <div id="quizScreen" style="display:none;">
+    <button class="back-btn" id="backToMenuBtn">← Back to Menu</button>
+    <div class="question-area">
+      <div id="skillBadge" class="badge-math" style="display:inline-block; padding:4px 12px; border-radius:40px;">Practice</div>
+      <div id="questionTypeIndicator" style="text-align:center; margin:8px 0;"></div>
+      <div class="progress-label" id="progressLabel">Question 1 of 3</div>
+      <div id="questionText" class="question-text" style="font-size:1rem;"></div>
+      <div id="dynamicContent"></div>
+      <div class="feedback-box" id="feedbackBox">
+        <div id="feedbackMessage"></div>
+        <div id="coachingMessage" class="coaching-tip"></div>
+        <button class="action-btn" id="continueBtn" style="margin-top:10px; width:100%;">➡ Continue</button>
+      </div>
+      <button class="next-btn" id="nextBtn">🌟 Next Question →</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="quizProgress" style="width:0%"></div></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
