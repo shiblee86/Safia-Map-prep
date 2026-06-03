@@ -5,7 +5,6 @@ const AppState = {
   difficulty: 'medium',
   totalStars: 0,
   currentSubject: '',
-  currentQuestions: [],
   currentIndex: 0,
   correctCount: 0,
   currentStreak: 0,
@@ -18,13 +17,46 @@ const AppState = {
   subjectStats: {},
   currentUtterance: null,
   
-  MATH_PROBLEM_COUNT: 2,
-  READING_PROBLEM_COUNT: 3,
+  QUESTIONS_PER_SESSION: 5, // Each session has 5 questions max
   
   init() {
     this.loadFromStorage();
     this.updateStarDisplay();
     this.updateDifficultyButtons();
+    this.initGeneratorMap();
+  },
+  
+  initGeneratorMap() {
+    // Map each subject to its generator function for dynamic on-demand questions
+    this.generatorMap = {
+      // Math generators
+      'additionCarry': generateAdditionCarry,
+      'subtractionBorrow': generateSubtractionBorrow,
+      'missingNumber': generateMissingNumber,
+      'makeASum': generateMakeASum,
+      'howManyMore': generateHowManyMore,
+      'wordProblems': generateWordProblem,
+      // Measurement generators
+      'time': generateTimeQuestion,
+      'money': generateMoneyQuestion,
+      'graphs': generateGraphQuestion,
+      'lengthWeight': generateLengthWeightQuestion,
+      'sorting': generateSortingQuestion,
+      // Reading generators
+      'vocabulary': generateVocabulary,
+      'sequencing': generateSequencing,
+      'fillInBlank': generateFillBlank,
+      'spelling': generateSpelling
+    };
+    
+    // Map for review subjects (these use multiple generators)
+    this.reviewMap = {
+      'mathReview': [generateAdditionCarry, generateSubtractionBorrow, generateMissingNumber,
+                     generateMakeASum, generateHowManyMore, generateWordProblem,
+                     generateTimeQuestion, generateMoneyQuestion, generateGraphQuestion,
+                     generateLengthWeightQuestion, generateSortingQuestion],
+      'readingReview': [generateVocabulary, generateSequencing, generateFillBlank, generateSpelling]
+    };
   },
   
   loadFromStorage() {
@@ -138,6 +170,7 @@ function launchConfetti() {
     setTimeout(() => conf.remove(), 800);
   }
 }
+
 // =============== MATH QUESTION GENERATORS ===============
 function generateAdditionCarry() {
   let a, b;
@@ -268,12 +301,11 @@ function generateGraphQuestion() {
   const max = Math.max(cats, dogs, fish);
   const heights = [cats, dogs, fish].map(v => Math.round((v / max) * 60) + 20);
   const options = shuffle(["Cats", "Dogs", "Fish", "All the same"]);
-  const correctIndex = options.findIndex(opt => {
-    if (opt === "Cats") return cats > dogs && cats > fish;
-    if (opt === "Dogs") return dogs > cats && dogs > fish;
-    if (opt === "Fish") return fish > cats && fish > dogs;
-    return cats === dogs && dogs === fish;
-  });
+  let correctIndex = 0;
+  if (cats > dogs && cats > fish) correctIndex = options.indexOf("Cats");
+  else if (dogs > cats && dogs > fish) correctIndex = options.indexOf("Dogs");
+  else if (fish > cats && fish > dogs) correctIndex = options.indexOf("Fish");
+  else correctIndex = options.indexOf("All the same");
   return {
     type: "math", subject: "graphs",
     instruction: "🌸 Look at the graph. Which pet is the most popular?",
@@ -345,6 +377,7 @@ function generateSortingQuestion() {
     coaching: correctAnswer
   };
 }
+
 // =============== READING GENERATORS ===============
 const VOCAB_WORDS = [
   { word: "enormous", meaning: "very big", example: "The enormous elephant was huge." },
@@ -352,7 +385,9 @@ const VOCAB_WORDS = [
   { word: "valiant", meaning: "brave", example: "The valiant knight saved the kingdom." },
   { word: "curious", meaning: "wants to learn", example: "The curious cat looked inside." },
   { word: "tremendous", meaning: "very large", example: "The tremendous wave crashed." },
-  { word: "dazzling", meaning: "very bright", example: "The dazzling stars lit up the sky." }
+  { word: "dazzling", meaning: "very bright", example: "The dazzling stars lit up the sky." },
+  { word: "fragile", meaning: "easily broken", example: "The fragile vase fell and cracked." },
+  { word: "ancient", meaning: "very old", example: "The ancient tree stood for centuries." }
 ];
 
 function generateVocabulary() {
@@ -371,7 +406,8 @@ function generateVocabulary() {
 
 const SEQUENCING_STORIES = [
   { order: ["woke up", "brushed teeth", "ate breakfast", "went to school"], question: "What happened AFTER brushing teeth?", correct: "ate breakfast", wrong: ["woke up", "went to school"], fullStory: "First, Mia woke up. Then she brushed her teeth. Next, she ate breakfast. Finally, she went to school." },
-  { order: ["planted seed", "sprout appeared", "flower bloomed", "made new seeds"], question: "What happened BEFORE the flower bloomed?", correct: "sprout appeared", wrong: ["planted seed", "made new seeds"], fullStory: "First, Tom planted a seed. Then a sprout appeared. Next, a flower bloomed. Finally, it made new seeds." }
+  { order: ["planted seed", "sprout appeared", "flower bloomed", "made new seeds"], question: "What happened BEFORE the flower bloomed?", correct: "sprout appeared", wrong: ["planted seed", "made new seeds"], fullStory: "First, Tom planted a seed. Then a sprout appeared. Next, a flower bloomed. Finally, it made new seeds." },
+  { order: ["got flour", "mixed dough", "baked cake", "ate cake"], question: "What happened AFTER mixing the dough?", correct: "baked cake", wrong: ["got flour", "ate cake"], fullStory: "First, Leo got flour. Then he mixed the dough. Next, he baked a cake. Finally, he ate it." }
 ];
 
 function generateSequencing() {
@@ -390,7 +426,9 @@ function generateSequencing() {
 
 const FITB_SENTENCES = [
   { sentence: "The _____ elephant was so big it couldn't fit through the gate.", options: ["tiny", "enormous", "colorful", "fast"], correct: "enormous", explanation: "Enormous means very big" },
-  { sentence: "Safia felt a rumbling in her tummy. She was very _____.", options: ["sleepy", "hungry", "thirsty", "happy"], correct: "hungry", explanation: "A rumbling tummy means you want food" }
+  { sentence: "Safia felt a rumbling in her tummy. She was very _____.", options: ["sleepy", "hungry", "thirsty", "happy"], correct: "hungry", explanation: "A rumbling tummy means you want food" },
+  { sentence: "The _____ knight saved the princess from the dragon.", options: ["scared", "valiant", "sleepy", "tiny"], correct: "valiant", explanation: "Valiant means brave" },
+  { sentence: "Be careful with that glass. It's very _____.", options: ["strong", "fragile", "heavy", "hot"], correct: "fragile", explanation: "Fragile means easily broken" }
 ];
 
 function generateFillBlank() {
@@ -408,7 +446,9 @@ function generateFillBlank() {
 
 const SPELLING_WORDS = [
   { word: "friend", hint: "Someone you like to play with", explanation: "F-R-I-E-N-D" },
-  { word: "because", hint: "The reason why something happens", explanation: "B-E-C-A-U-S-E" }
+  { word: "because", hint: "The reason why something happens", explanation: "B-E-C-A-U-S-E" },
+  { word: "beautiful", hint: "Something pretty", explanation: "B-E-A-U-T-I-F-U-L" },
+  { word: "different", hint: "Not the same", explanation: "D-I-F-F-E-R-E-N-T" }
 ];
 
 function generateSpelling() {
@@ -420,11 +460,15 @@ const READING_PASSAGES = [
   { passage: "Safia and her mom went to the beach. Safia built a big sandcastle. A wave came and washed away one wall. Safia felt sad but rebuilt it even bigger.", questions: [
     { text: "Where did Safia go?", options: ["Park", "Beach", "School"], correct: 1 },
     { text: "What happened to the sandcastle?", options: ["It got bigger", "A wave washed it", "She knocked it down"], correct: 1 }
+  ] },
+  { passage: "Tom found a lost puppy in the park. He gave it some water. Then he called the number on its collar. The owner came and thanked Tom.", questions: [
+    { text: "Where did Tom find the puppy?", options: ["School", "Park", "Store"], correct: 1 },
+    { text: "What did Tom do first?", options: ["Called the owner", "Gave it water", "Took it home"], correct: 1 }
   ] }
 ];
 
 function generateReadingComprehension() {
-  const p = READING_PASSAGES[0];
+  const p = READING_PASSAGES[randomInt(0, READING_PASSAGES.length - 1)];
   return { type: "comp", subject: "readingComprehension", passage: p.passage, questions: JSON.parse(JSON.stringify(p.questions)), isListening: false };
 }
 
@@ -432,35 +476,38 @@ const LISTENING_PASSAGES = [
   { audioText: "Leo and his dad went to the park. Leo played on the swings first. Then he climbed the slide. After that, he got a drink of water.", questions: [
     { text: "Where did Leo go?", options: ["Beach", "Park", "Library"], correct: 1 },
     { text: "What did Leo do FIRST?", options: ["Climbed slide", "Played on swings", "Got water"], correct: 1 }
+  ] },
+  { audioText: "Mia's cat, Whiskers, is very playful. Every morning, Whiskers chases a red ball of yarn around the living room.", questions: [
+    { text: "What is the cat's name?", options: ["Mia", "Whiskers", "Fluffy"], correct: 1 },
+    { text: "What color is the ball of yarn?", options: ["Blue", "Red", "Green"], correct: 1 }
   ] }
 ];
 
 function generateListeningComprehension() {
-  const p = LISTENING_PASSAGES[0];
+  const p = LISTENING_PASSAGES[randomInt(0, LISTENING_PASSAGES.length - 1)];
   return { type: "comp", subject: "listeningComprehension", passage: p.audioText, questions: JSON.parse(JSON.stringify(p.questions)), isListening: true };
 }
 
-// =============== SECTION BUILDERS ===============
-function buildMathSection(generator) {
-  const qs = []; for (let i = 0; i < AppState.MATH_PROBLEM_COUNT; i++) qs.push(generator()); return qs;
-}
-function buildReadingSection(generator) {
-  const qs = []; for (let i = 0; i < AppState.READING_PROBLEM_COUNT; i++) qs.push(generator()); return qs;
-}
+// =============== SECTION BUILDERS (for review only) ===============
 function buildMathReview() {
-  return [
-    generateAdditionCarry(), generateSubtractionBorrow(), generateMissingNumber(),
-    generateMakeASum(), generateHowManyMore(), generateWordProblem(),
-    generateTimeQuestion(), generateMoneyQuestion(), generateGraphQuestion(),
-    generateLengthWeightQuestion(), generateSortingQuestion()
+  const generators = [
+    generateAdditionCarry, generateSubtractionBorrow, generateMissingNumber,
+    generateMakeASum, generateHowManyMore, generateWordProblem,
+    generateTimeQuestion, generateMoneyQuestion, generateGraphQuestion,
+    generateLengthWeightQuestion, generateSortingQuestion
   ];
+  return generators.map(gen => gen());
 }
+
 function buildReadingReview() {
-  return [generateVocabulary(), generateSequencing(), generateFillBlank(), generateSpelling(), generateReadingComprehension(), generateListeningComprehension()];
+  const generators = [generateVocabulary, generateSequencing, generateFillBlank, generateSpelling];
+  return generators.map(gen => gen());
 }
 
 // =============== UI RENDER FUNCTIONS ===============
 let currentCompData = null;
+let currentReviewIndex = 0;
+let currentReviewList = [];
 
 function updateUI() {
   document.getElementById('correctCount').innerText = AppState.correctCount;
@@ -474,6 +521,8 @@ function showMenu() {
   AppState.quizActive = false;
   AppState.compMode = false;
   currentCompData = null;
+  currentReviewList = [];
+  currentReviewIndex = 0;
   updateUI();
 }
 
@@ -481,6 +530,33 @@ function showQuiz() {
   document.getElementById('menuScreen').style.display = 'none';
   document.getElementById('quizScreen').style.display = 'block';
   updateUI();
+}
+
+// DYNAMIC QUESTION RENDERER - Generates a fresh question on demand
+function renderDynamicQuestion() {
+  // Check if we're in review mode
+  if (AppState.currentSubject === 'mathReview' || AppState.currentSubject === 'readingReview') {
+    if (currentReviewList.length === 0 || currentReviewIndex >= currentReviewList.length) {
+      // Generate fresh review questions each time
+      currentReviewList = AppState.currentSubject === 'mathReview' ? buildMathReview() : buildReadingReview();
+      currentReviewIndex = 0;
+    }
+    const q = currentReviewList[currentReviewIndex];
+    renderQuestion(q);
+    document.getElementById('progressLabel').textContent = `Review ${currentReviewIndex + 1} of ${currentReviewList.length}`;
+    return;
+  }
+  
+  // For regular subjects - use generator map for fresh questions
+  const generator = AppState.generatorMap[AppState.currentSubject];
+  
+  if (generator) {
+    const q = generator(); // Generate a brand new question every time
+    renderQuestion(q);
+    document.getElementById('progressLabel').textContent = `Question ${AppState.currentIndex + 1} of ${AppState.QUESTIONS_PER_SESSION}`;
+    const progressPercent = (AppState.currentIndex / AppState.QUESTIONS_PER_SESSION) * 100;
+    document.getElementById('quizProgress').style.width = progressPercent + '%';
+  }
 }
 
 function renderQuestion(q) {
@@ -491,6 +567,7 @@ function renderQuestion(q) {
   
   feedbackBox.classList.remove('show', 'feedback-correct', 'feedback-wrong');
   continueBtn.style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
   
   if (q.instruction) {
     questionTextDiv.innerHTML = `<div class="instruction-text">${q.instruction}</div>${q.text || ''}`;
@@ -537,7 +614,8 @@ function renderMathQuestion(q, container) {
 }
 
 function renderReadingQuestion(q, container) {
-  const readBtn = `<button class="audio-btn" onclick="speakNow('${q.story.replace(/'/g, "\\'")}', this)">🔊 Read Aloud</button>`;
+  const safeStory = q.story.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  const readBtn = `<button class="audio-btn" onclick="speakNow('${safeStory}', this)">🔊 Read Aloud</button>`;
   container.innerHTML = `<div class="passage-box">${readBtn}<div style="margin-top:10px;">${q.story}</div></div>
     <div class="instruction-text">${q.question}</div>
     <div class="picture-grid" id="pictureGrid"></div>
@@ -647,14 +725,21 @@ function showFeedback(isCorrect, q, correctAnswer, coaching) {
   
   continueBtn.style.display = 'block';
   continueBtn.onclick = () => {
-    AppState.currentIndex++;
-    const progressLabel = document.getElementById('progressLabel');
-    if (AppState.currentIndex < AppState.currentQuestions.length) {
-      renderQuestion(AppState.currentQuestions[AppState.currentIndex]);
-      progressLabel.textContent = `Question ${AppState.currentIndex + 1} of ${AppState.currentQuestions.length}`;
-      document.getElementById('quizProgress').style.width = ((AppState.currentIndex) / AppState.currentQuestions.length) * 100 + '%';
+    // Move to next question
+    if (AppState.currentSubject === 'mathReview' || AppState.currentSubject === 'readingReview') {
+      currentReviewIndex++;
+      if (currentReviewIndex < currentReviewList.length) {
+        renderDynamicQuestion();
+      } else {
+        finishQuiz();
+      }
     } else {
-      finishQuiz();
+      AppState.currentIndex++;
+      if (AppState.currentIndex < AppState.QUESTIONS_PER_SESSION) {
+        renderDynamicQuestion(); // This generates a fresh question
+      } else {
+        finishQuiz();
+      }
     }
     feedbackBox.classList.remove('show');
   };
@@ -685,7 +770,8 @@ function renderComprehensionIntro() {
     const listenBtn = document.getElementById('listenBtn');
     listenBtn.onclick = () => speakNow(AppState.compPassage, listenBtn);
   } else {
-    container.innerHTML = `<div class="passage-box"><button class="audio-btn" onclick="speakNow('${AppState.compPassage.replace(/'/g, "\\'")}', this)">🔊 Read Aloud</button>
+    const safePassage = AppState.compPassage.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    container.innerHTML = `<div class="passage-box"><button class="audio-btn" onclick="speakNow('${safePassage}', this)">🔊 Read Aloud</button>
       <div style="margin-top:10px;">${AppState.compPassage}</div></div>
       <button class="action-btn submit" id="startQuestionsBtn">🌸 Start Questions →</button>`;
   }
@@ -783,7 +869,9 @@ function renderComprehensionQuestion() {
 }
 
 function finishQuiz() {
-  const total = AppState.currentQuestions.length;
+  const total = (AppState.currentSubject === 'mathReview' || AppState.currentSubject === 'readingReview') 
+    ? currentReviewList.length 
+    : AppState.QUESTIONS_PER_SESSION;
   const percent = Math.round((AppState.correctCount / total) * 100);
   const message = percent >= 80 ? `🎉 Amazing! ${AppState.correctCount}/${total} correct!` :
                   percent >= 60 ? `🌸 Good job! ${AppState.correctCount}/${total} correct.` :
@@ -793,6 +881,8 @@ function finishQuiz() {
   AppState.quizActive = false;
   AppState.compMode = false;
   currentCompData = null;
+  currentReviewList = [];
+  currentReviewIndex = 0;
 }
 
 function startSubject(subject) {
@@ -802,39 +892,25 @@ function startSubject(subject) {
   AppState.currentIndex = 0;
   AppState.compMode = false;
   currentCompData = null;
+  currentReviewList = [];
+  currentReviewIndex = 0;
   updateUI();
   
-  // Math sections (2 problems each)
-  if (subject === 'additionCarry') AppState.currentQuestions = buildMathSection(generateAdditionCarry);
-  else if (subject === 'subtractionBorrow') AppState.currentQuestions = buildMathSection(generateSubtractionBorrow);
-  else if (subject === 'missingNumber') AppState.currentQuestions = buildMathSection(generateMissingNumber);
-  else if (subject === 'makeASum') AppState.currentQuestions = buildMathSection(generateMakeASum);
-  else if (subject === 'howManyMore') AppState.currentQuestions = buildMathSection(generateHowManyMore);
-  else if (subject === 'wordProblems') AppState.currentQuestions = buildMathSection(generateWordProblem);
-  // Measurement sections (2 problems each)
-  else if (subject === 'time') AppState.currentQuestions = buildMathSection(generateTimeQuestion);
-  else if (subject === 'money') AppState.currentQuestions = buildMathSection(generateMoneyQuestion);
-  else if (subject === 'graphs') AppState.currentQuestions = buildMathSection(generateGraphQuestion);
-  else if (subject === 'lengthWeight') AppState.currentQuestions = buildMathSection(generateLengthWeightQuestion);
-  else if (subject === 'sorting') AppState.currentQuestions = buildMathSection(generateSortingQuestion);
-  // Final review (11 problems)
-  else if (subject === 'mathReview') AppState.currentQuestions = buildMathReview();
-  // Reading sections (3 problems each)
-  else if (subject === 'readingComprehension') { startComprehension(generateReadingComprehension(), false); showQuiz(); return; }
-  else if (subject === 'listeningComprehension') { startComprehension(generateListeningComprehension(), true); showQuiz(); return; }
-  else if (subject === 'vocabulary') AppState.currentQuestions = buildReadingSection(generateVocabulary);
-  else if (subject === 'sequencing') AppState.currentQuestions = buildReadingSection(generateSequencing);
-  else if (subject === 'fillInBlank') AppState.currentQuestions = buildReadingSection(generateFillBlank);
-  else if (subject === 'spelling') AppState.currentQuestions = buildReadingSection(generateSpelling);
-  else if (subject === 'readingReview') AppState.currentQuestions = buildReadingReview();
-  
-  if (AppState.currentQuestions.length) {
-    showQuiz();
-    renderQuestion(AppState.currentQuestions[0]);
-    document.getElementById('progressLabel').textContent = `Question 1 of ${AppState.currentQuestions.length}`;
-    document.getElementById('quizProgress').style.width = '0%';
-    document.getElementById('skillBadge').innerHTML = subject.replace(/([A-Z])/g, ' $1').trim();
+  // Handle Comprehension special cases
+  if (subject === 'readingComprehension') { 
+    startComprehension(generateReadingComprehension(), false); 
+    showQuiz(); 
+    return; 
   }
+  if (subject === 'listeningComprehension') { 
+    startComprehension(generateListeningComprehension(), true); 
+    showQuiz(); 
+    return; 
+  }
+  
+  showQuiz();
+  renderDynamicQuestion(); // This generates the first fresh question
+  document.getElementById('skillBadge').innerHTML = subject.replace(/([A-Z])/g, ' $1').trim();
 }
 
 function showStats() {
